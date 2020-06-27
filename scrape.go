@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-
+	"io/ioutil"
+	"encoding/json"
 	"github.com/gocolly/colly"
 )
 
@@ -14,11 +15,23 @@ type bookItem struct {
 	Title string `json:"title"`
 	Rating string `json:"rating"`
 	Price string `json:"price"`
-	Image string `json:"image"`
 	Stock string `json:"stock"`
 }
 
+func dataOut(file []byte) {
+	this := ioutil.WriteFile("data.json", file, 0644)
+	if err := this; err != nil {
+		panic(err)
+	}
+}
 
+func serializeJSON(boo []bookItem) {
+	fmt.Println("Serializing Data")
+	allbooksjstoned, _ := json.Marshal(boo)
+	dataOut(allbooksjstoned)
+	fmt.Println("Serializing Complete")
+	fmt.Println(string(allbooksjstoned))
+}
 
 func main() {
 	// Instantiate default collector
@@ -32,13 +45,12 @@ func main() {
 		book.Title = e.ChildText("h3")
 		book.Rating = e.ChildText(".star-rating")
 		book.Price = e.ChildText(".price_color")
-		book.Image = e.ChildText(".thumbnail")
 		book.Stock = e.ChildText(".availability")
 		books = append(books, book)
 
 		// Print link
-		fmt.Printf("Title: %q\n, Rating: %q\n, Price: %q\n, Image: %q\n, Stock: %q\n,", book.Title, book.Rating, book.Price, book.Image, book.Stock)
-                // fmt.Printf("Link found: %q -> %s\n", e.Text, link)
+		fmt.Printf("Title: %q\n, Rating: %q\n, Price: %q\n, Stock: %q\n,", book.Title, book.Rating, book.Price, book.Stock)
+				// fmt.Printf("Link found: %q -> %s\n", e.Text, link)
 	})
 
 	// c.OnHTML("ol > li", func(e *colly.HTMLElement) {
@@ -52,4 +64,5 @@ func main() {
 	})
 
 	c.Visit("http://books.toscrape.com/")
+	serializeJSON(books)
 }
